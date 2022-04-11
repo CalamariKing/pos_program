@@ -9,6 +9,7 @@ with open('menu.csv', 'r') as file:
 # prints menu
 for i in range(0, len(food_menu)):
     print(str(i) + str(food_menu[i]))
+file.close()
 # cost will keep track of the cost of the food, and is used globally throughout the program
 cost = 0
 # this 'orders' list will store all the infomation from all the customers
@@ -17,7 +18,7 @@ orders = []
 
 def customer_orders():
     # every order is created individually then transferred to orders list, which wil store all information
-    order = ['', '', '', '', '', '', '']
+    order = ['', '', '', '', '']
     # cost(global) is to keep track of the total cost of the food
     global cost
     # resets cost to 0
@@ -28,11 +29,12 @@ def customer_orders():
     # the parts of the program are individual methods to provide convienience for users
     # the selected item is the item that the customer has selected, as a sublist of the food_menu list
     selected_item = select_food(order)
-    order[1] = selected_item
+    order[1] = selected_item[0]
     dietary_requirements(selected_item, order)
     simple_options(selected_item, order)
     steak_options(selected_item, order)
     food_costs(selected_item, order)
+    orders.append(order)
 
 
 '''
@@ -130,7 +132,14 @@ def simple_options(selected_item, order):
             simple_options(selected_item, order)
 
 
+'''
+As the steak in the food_menu is more complex than simple_options, I added a seperate method for
+it that allows for sauce options and an option to add multiple eggs(max 4)
+'''
+
+
 def steak_options(selected_item, order):
+    # checks to see if the option includes the string "Rib Eye Steak"
     if selected_item[0] == "Rib Eye Steak":
         sauce_options(selected_item, order)
         egg_option(order)
@@ -138,8 +147,10 @@ def steak_options(selected_item, order):
 
 def sauce_options(selected_item, order):
     global cost
+    # asks for the sauce wanted, or n for none
     sauce = input("Add Mushroom Sauce, Garlic Butter OR Peppercorn Sauce $3.00. m/g/p or n for none")
     if sauce == "m":
+        # if a sauce is selected, it adds that sauce to the order list then adds a cost
         order[2] = "Mushroom Sauce $3.00."
         cost += 3
     elif sauce == "g":
@@ -157,6 +168,7 @@ def sauce_options(selected_item, order):
 
 def egg_option(order):
     global cost
+    # asks for aount of eggs wanted
     eggs = input("Add Eggs(each) $3.00(Max 4), Input amount: (0 for none)")
     if 0 <= int(eggs) <= 4:
         order[2] = order[2] + "-Add " + eggs + " Eggs $" + str(int(eggs)*3) + ".00"
@@ -166,11 +178,19 @@ def egg_option(order):
         print("you need to input a positive integer that is less than 5")
         egg_option(order)
 
+'''
+food_costs is needed to get the final cost of the food, as well as give options
+if more than one size is available
+'''
+
 
 def food_costs(selected_item, order):
     global cost
+    # checks for a '/' in selected_item
     if '/' in selected_item[4]:
+        # splits the string at the '/'
         food_size_options = selected_item[4].split('/')
+        # asks which size the customer wants
         food_size = input("1: " + food_size_options[0] + " 2: " + food_size_options[1] + "select integer")
         if 0 < int(food_size) < 3:
             food_size = food_size_options[int(food_size) - 1]
@@ -188,5 +208,29 @@ def food_costs(selected_item, order):
         print(cost)
 
 
-customer_orders()
+def order_cancellation():
+    cancel_order = input("press enter to continue order or 'x' to exit program ''")
+    if cancel_order == "x":
+        quit()
 
+
+
+def meals_amount():
+    try:
+        while True:
+            amount = int(input("Meals Amount:"))
+            if 0 < amount < 5:
+                return amount
+            else:
+                print("You need to input a positive integer less than 5")
+                continue
+
+    except:
+        print("you need to input an integer value")
+        meals_amount()
+
+
+meals_amount = meals_amount()
+for i in range(0, meals_amount):
+    print("Customer " + str(i + 1))
+    customer_orders()
