@@ -18,7 +18,23 @@ In this part of the code, It prints out both the food and the drinks menu to a c
 
 '''
 
+f = open('display_menu.csv', 'w')
+f.write("------FOOD MENU------")
+for y in range(1, len(food_menu)):
+    f.write("\n" + str(y) + ": "+ str(food_menu[y])
+            .replace("'", '')
+            .replace('[', '')
+            .replace(']', '')
+            .replace(',', '-') + "\n")
+f.write(" \n\n------DRINKS MENU------")
+for d in range(1, len(drinks_menu)):
+    f.write("\n" + str(d) + ": " + str(drinks_menu[d])
+            .replace("'", '')
+            .replace('[', '')
+            .replace(']', '')
+            .replace(',', '-') + "\n")
 
+f.close()
 
 
 # cost will keep track of the cost of the food, and is used globally throughout the program
