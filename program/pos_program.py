@@ -20,6 +20,7 @@ In this part of the code, It prints out both the food and the drinks menu to a c
 
 
 
+
 # cost will keep track of the cost of the food, and is used globally throughout the program
 cost = 0
 # this 'orders' list will store all the infomation from all the customers
