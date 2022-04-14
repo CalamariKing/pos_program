@@ -1,31 +1,40 @@
 import csv
 
-# opens the food_menu and turns it into a 2d list
+'''
+This first part opens the menu's from the csv's and turns them into 2d lists, 
+'''
+
+# this is the 2d list the food menu will be stored in
 food_menu = []
 with open('menu.csv', 'r') as file:
     reader = csv.reader(file)
     for row in reader:
         food_menu.append(row)
 file.close()
+# 2d list that stores the drinks menu
 drinks_menu = []
 with open('drinks_menu.csv', 'r') as file:
     reader = csv.reader(file)
     for row in reader:
         drinks_menu.append(row)
+drinks_menu.append(["No Drink", ""])
 
 '''
-In this part of the code, It prints out both the food and the drinks menu to a csv file, res
-
+In this part of the code, It prints out both the food and the drinks menu to a csv file, 
+to improve user experience.
 '''
 
 f = open('display_menu.csv', 'w')
+# title
 f.write("------FOOD MENU------")
 for y in range(1, len(food_menu)):
-    f.write("\n" + str(y) + ": "+ str(food_menu[y])
+    # multiple .replaces to make the strings look better in the menu
+    f.write("\n" + str(y) + ": " + str(food_menu[y])
             .replace("'", '')
             .replace('[', '')
             .replace(']', '')
             .replace(',', '-') + "\n")
+# drinks menu
 f.write(" \n\n------DRINKS MENU------")
 for d in range(1, len(drinks_menu)):
     f.write("\n" + str(d) + ": " + str(drinks_menu[d])
@@ -33,7 +42,6 @@ for d in range(1, len(drinks_menu)):
             .replace('[', '')
             .replace(']', '')
             .replace(',', '-') + "\n")
-
 f.close()
 
 
@@ -41,16 +49,15 @@ f.close()
 cost = 0
 # this 'orders' list will store all the infomation from all the customers
 orders = []
+# selected_item is global, and is used to store the food item selected by the user
 selected_item = []
+# similar to selected_item
 selected_drink = []
 
 
-def food_order():
+def customer_order():
     global selected_item
-    # prints menu
-    for k in range(0, len(food_menu)):
-        print(str(k) + str(food_menu[k]))
-    # every order is created individually then transferred to orders list, which wil store all information
+    # every order is created individually then transferred to 'orders' list, which wil store all user orders
     order = ['', '', '', '', '', '', '', '']
     # cost(global) is to keep track of the total cost of the food
     global cost
@@ -62,12 +69,19 @@ def food_order():
     drink_order(order)
     # the parts of the program are individual methods to provide convenience for users
     # the selected item is the item that the customer has selected, as a sublist of the food_menu list
-    selected_item = select_food(order)
+    selected_item = select_food()
+    # adds the name of the selected_item to the order list
     order[1] = selected_item[0]
-    dietary_requirements(selected_item, order)
+    # asks for dietary requirements of foods
+    dietary_requirements(order)
+    # asks for simple options that can be added easily
     simple_options(order)
+    # as steak is more complicated, it requires extra code to function
     steak_options(order)
+    # gets the cost of the foods
     food_costs(order)
+    # adds the order to
+    order.append(cost)
     orders.append(order)
 
 
@@ -80,20 +94,20 @@ This is seen in all the methods.
 '''
 
 
-def select_food(order):
+def select_food():
     global selected_item
-    try:
-        selected_number = int(input("Meal #:"))
-        if 0 < int(selected_number) < len(food_menu):
-            selected_item = food_menu[int(selected_number)]
-            return selected_item
-        else:
-            print("You need to input an integer value within the confines of the menu. Please try again")
-            select_food(order)
-    except ValueError:
-        print("You need to input an integer value. Please Try Again")
-        selected_item = select_food(order)
-        return selected_item
+    while True:
+        try:
+            selected_number = int(input("Meal #:"))
+            if 0 < int(selected_number) < len(food_menu):
+                selected_item = food_menu[int(selected_number)]
+                return selected_item
+            else:
+                print("You need to input an integer value within the confines of the menu. Please try again")
+                continue
+        except ValueError:
+            print("You need to input an integer value. Please Try Again")
+            continue
 
 
 '''
@@ -102,13 +116,13 @@ include those options. The method contains another two methods for gluten free o
 '''
 
 
-def dietary_requirements(selected_item, order):
-    if_gluten(selected_item, order)
-    if_vegan(selected_item, order)
+def dietary_requirements(order):
+    if_gluten(order)
+    if_vegan(order)
 
 
-# this method asks for either a 'y' or a 'n', sometjing seen with many options throughout the code
-def if_gluten(selected_item, order):
+# this method asks for either a 'y' or a 'n', something seen with many options throughout the code
+def if_gluten(order):
     if 'gf' in selected_item[3]:
         dietary_gluten = input("Gluten Free? y/n")
         # depending on the value given, dietary_gluten will be one of two values
@@ -118,8 +132,8 @@ def if_gluten(selected_item, order):
             dietary_gluten = "Non Gluten Free, "
         else:
             # used to repeat the method if an incorrect value is inputted
-            if_gluten(selected_item, order)
-            print("you need to print a valid value!")
+            if_gluten(order)
+            print("you need to input a valid value!")
     else:
         dietary_gluten = "Non Gluten Free, "
         # The dietary_gluten is then appended to the orders list
@@ -127,7 +141,7 @@ def if_gluten(selected_item, order):
 
 
 # same as if_gluten method
-def if_vegan(selected_item, order):
+def if_vegan(order):
     if 'v' in selected_item[3]:
         dietary_vegan = input("Vegan? y/n")
         if dietary_vegan == 'y':
@@ -136,7 +150,7 @@ def if_vegan(selected_item, order):
             dietary_vegan = "Non Vegan."
         else:
             print("you did not enter a valid value. Please try again")
-            if_vegan(selected_item, order)
+            if_vegan(order)
     else:
         dietary_vegan = "Non Vegan."
         # order[3] will now equal dietary_gluten + dietary_vegan
@@ -154,22 +168,20 @@ def simple_options(order):
     global cost
     # checks for '-Add' in index
     if '-Add' in selected_item[2]:
-        add_option = input(selected_item[2])
+        add_option = input(selected_item[2] + " y/n")
         if add_option == 'y':
-            print(cost)
             # adds the absolute value of the float between certain indexes in the selected_item[2] variable
             cost += abs(float(selected_item[2][len(selected_item[2]) - 4:len(selected_item[2])-1]))
             # adds option to order
             order[2] = selected_item[2]
-            order_cancellation()
         elif add_option == 'n':
             order[2] = "None"
-            order_cancellation()
         else:
             print("you did not enter a valid value. Please try again")
             simple_options(order)
     else:
         order[2] = "None"
+
 
 '''
 As the steak in the food_menu is more complex than simple_options, I added a seperate method for
@@ -182,7 +194,6 @@ def steak_options(order):
     if selected_item[0] == "Rib Eye Steak":
         sauce_options(order)
         egg_option(order)
-        order_cancellation()
 
 
 def sauce_options(order):
@@ -208,14 +219,17 @@ def sauce_options(order):
 
 def egg_option(order):
     global cost
-    # asks for aount of eggs wanted
-    eggs = input("Add Eggs(each) $3.00(Max 4), Input amount: (0 for none)")
-    if 0 <= int(eggs) <= 4:
-        order[2] = order[2] + "-Add " + eggs + " Eggs $" + str(int(eggs)*3) + ".00"
-        print(order)
-        cost += int(eggs) * 3
-    else:
-        print("you need to input a positive integer that is less than 5")
+    # asks for amount of eggs wanted
+    try:
+        eggs = input("Add Eggs(each) $3.00(Max 4), Input amount: (0 for none)")
+        if 0 <= int(eggs) <= 4:
+            order[2] = order[2] + " -Add " + eggs + " Eggs $" + str(int(eggs)*3) + ".00"
+            cost += int(eggs) * 3
+        else:
+            print("you need to input a positive integer that is less than 5")
+            egg_option(order)
+    except ValueError:
+        print("you need to input an integer value")
         egg_option(order)
 
 
@@ -232,23 +246,25 @@ def food_costs(order):
         # splits the string at the '/'
         food_size_options = selected_item[4].split('/')
         # asks which size the customer wants
-        food_size = input("1: " + food_size_options[0] + " 2: " + food_size_options[1] + "select integer")
-        if 0 < int(food_size) < 3:
-            food_size = food_size_options[int(food_size) - 1]
-            food_cost = food_size[len(food_size) - 5:len(food_size)]
-            cost = cost + abs(float(food_cost))
-            order[4] = food_cost
-            print(cost)
-        else:
-            print("sorry, you need to select either 1 or 2")
+        try:
+            food_size = input("1: " + food_size_options[0] + " 2: " + food_size_options[1] + " Select integer:")
+            if 0 < int(food_size) < 3:
+                food_size = food_size_options[int(food_size) - 1]
+                food_cost = food_size[len(food_size) - 5:len(food_size)]
+                cost = cost + abs(float(food_cost))
+                order[4] = food_cost
+            else:
+                print("sorry, you need to select either 1 or 2")
+                food_costs(order)
+        except ValueError:
+            print("You need to input an integer value")
             food_costs(order)
     else:
-        cost += abs(float(selected_item[4][len(selected_item[2]) - 5:len(selected_item[2]) - 1]))
+        cost += abs(float(selected_item[4][len(selected_item[4]) - 5:len(selected_item[4]) - 1]))
         order[4] = selected_item[4]
-        print(order)
-        print(cost)
 
 
+# order cancellation
 def order_cancellation():
     cancel_order = input("press enter to continue order or 'x' to exit program ''")
     if cancel_order == "x":
@@ -256,48 +272,46 @@ def order_cancellation():
 
 
 def meals_amount():
-    try:
-        while True:
+    while True:
+        try:
             amount = int(input("Meals Amount:"))
             if 0 < amount < 5:
                 return amount
             else:
-                print("You need to input a positive integer less than 5")
-                continue
+                print("You need to input a positive integer less than 5. Please try again.")
 
-    except:
-        print("you need to input an integer value")
-        meals_amount()
+        except ValueError:
+            print("You need to input an integer value. Please try again.")
 
 
+# drink orders
 def drink_order(order):
     global selected_drink
-    for k in range(0, len(drinks_menu)):
-        print(str(k) + str(drinks_menu[k]))
     # drink selection
-    selected_drink = select_drink(order)
+    selected_drink = select_drink()
     order[5] = selected_drink[0]
     # options if selected_drink was a range of drinks
     drink_options(order)
     # costs for the drinks
     drink_costs(order)
 
+# basic selection for drink
 
-def select_drink(order):
+
+def select_drink():
     global selected_drink
-    try:
-        selected_drink = int(input("Drink #:"))
-        if 0 < int(selected_drink) < len(food_menu):
-            selected_drink = drinks_menu[int(selected_drink)]
-            print(selected_drink)
-            return selected_drink
-        else:
-            print("You need to input an integer value within the confines of the menu. Please try again")
-            select_drink(order)
-    except ValueError:
-        print("You need to input an integer value. Please Try Again")
-        selected_drink = select_drink(order)
-        return selected_drink
+    while True:
+        try:
+            selected_drink = int(input("Drink #:"))
+            if 0 < int(selected_drink) <= len(food_menu):
+                selected_drink = drinks_menu[int(selected_drink)]
+                return selected_drink
+            else:
+                print("You need to input an integer value within the confines of the menu. Please try again")
+                continue
+        except ValueError:
+            print("You need to input an integer value. Please Try Again")
+            continue
 
 
 '''
@@ -307,36 +321,60 @@ range selected. It then adds this to the order list.
 
 
 def drink_options(order):
-    try:
-        if '/' in selected_drink[2]:
-            # splits the range of options up at the '/'
-            options = selected_drink[2].split('/')
-            print("Drink Options:")
-            for x in range(0, len(options)):
-                print(str(x + 1) + ": " + str(options[x]))
-            drink_select = input("Select Integer ")
-            if 0 < int(drink_select) <= len(options):
-                order[6] = options[int(drink_select) - 1]
-                print('Selected Item: ' + options[int(drink_select) - 1])
-            else:
-                print("Sorry, you need to input a positive integer within the range of the options")
-                drink_options(order)
-    except ValueError:
-        print("Sorry, you need to enter a integer value")
-        drink_options(order)
+    if selected_drink[0] != "No Drink":
+        try:
+            if '/' in selected_drink[2] or 'or' in selected_drink[2]:
+                # splits the range of options up at the '/' or the 'or'
+                options = []
+                if '/' in selected_drink[2]:
+                    options = selected_drink[2].split('/')
+                if 'or' in selected_drink[2]:
+                    options = selected_drink[2].split('or')
+                print("Drink Options:")
+                for r in range(0, len(options)):
+                    print(str(r + 1) + ": " + str(options[r]))
+                drink_select = input("Select Integer ")
+                if 0 < int(drink_select) <= len(options):
+                    order[6] = options[int(drink_select) - 1]
+                    print('Selected Item: ' + options[int(drink_select) - 1])
+                else:
+                    print("Sorry, you need to input a positive integer within the range of the options")
+                    drink_options(order)
+        except ValueError:
+            print("Sorry, you need to enter a integer value")
+            drink_options(order)
 
 
 def drink_costs(order):
     global cost
     # gets cost from a specific index in the cost string
-    cost += abs(float(selected_drink[3][1:len(selected_drink[3])]))
-    order[7] = selected_drink[3]
+    if selected_drink[0] != "No Drink":
+        cost += abs(float(selected_drink[3][1:len(selected_drink[3])]))
+        order[7] = selected_drink[3]
 
 
+# this changes all orders into readable strings, and adds them to the display_menu csv
 meals_amount = meals_amount()
 for i in range(0, meals_amount):
     print("Customer " + str(i + 1))
 
-    food_order()
-    print(orders)
-
+    customer_order()
+    order_cancellation()
+display_orders = []
+print("Orders:")
+for x in range(0, len(orders)):
+    display_orders.append(f"Customer {x + 1}: \n"
+                          f"Name: {orders[x][0]}\n"
+                          f"Item: {orders[x][1]}\n"
+                          f"Additional Options: {orders[x][2]}\n"
+                          f"Dietary Requirements: {orders[x][3]}\n"
+                          f"Food cost: {orders[x][4]}\n"
+                          f"Drink/Drink Range: {orders[x][5]}\n"
+                          f"Drink Option: {orders[x][6]}\n"
+                          f"Drink Cost: {orders[x][7]}\n"
+                          f"Total Cost: {orders[x][8]}\n\n")
+f = open('complete_orders.csv', 'w')
+for j in range(0, len(display_orders)):
+    print(display_orders[j])
+    f.write(display_orders[j])
+f.close()
